@@ -18,9 +18,11 @@ export function delay() {
   return new Promise(resolve => setTimeout(resolve, randomTime));
 }
 
-//Caso ambas as datas estejam vazias, retorna FALSE. Casos em que há VENDA DIRETA, sem datas.
-//Caso tenha apenas uma data, verifica a validade da data fornecida. Se estiver expirada, retorna true.
-//Caso tenha duas datas, verifica ambas as datas. Retorna true apenas se ambas estiverem expiradas, caso contrário retorna false.
+/*
+ * Caso ambas as datas estejam vazias, retorna FALSE. Casos em que há VENDA DIRETA, sem datas.
+ * Caso tenha apenas uma data, verifica a validade da data fornecida. Se estiver expirada, retorna true.
+ * Caso tenha duas datas, verifica ambas as datas. Retorna true apenas se ambas estiverem expiradas, caso contrário retorna false.
+*/
 export function checkDatesExpired(dateString1, dateString2) {
 
   // Obtém o timestamp atual

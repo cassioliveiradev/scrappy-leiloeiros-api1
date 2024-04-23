@@ -3,9 +3,16 @@ import * as connection from './utils/connectionUtils.js';
 import * as result from "./utils/jsonObject.js";
 import sites from './utils/sitesInfo.js';
 
+/**
+ * Para cada site no arquivo '/utils/sitesInfo.js' Faz uma chamada ao site uma vez para obter a quantidade de lotes.
+ * Com a quantidade de lotes, calcula a quantidade de paginas que terá e itera sobre cada uma, pegando os lotes e armazenando na lista 'allLots'
+ * Depois varre a lista de lotes e popula o objeto json com as informações adequadas, fazendo os tratamentos e validações.
+ * Por garantia, procura e remove objetos que possam estar duplicados e remove o atributo status que foi usado em parte das validações.
+ * Também valida se algum dos lotes já está com as datas expiradas e caso esteja, é removido da lista. Também remove lotes com o campo type_bem = 'Indefinido'
+ * Por fim, salva a lista de lotes em um arquivo json na pasta /dados com um arquivo para cada site.
+ */
 async function main() {
     for (const site of sites) {
-
         console.log(`\nIniciando extração de dados para: ${site.name} (${site.url})`);
 
         //Faz uma primeira chamada para obter a contagem total de itens, apenas

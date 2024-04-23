@@ -18,14 +18,6 @@ export function getPaginationData(firstCall) {
     return { totalPages, lastIndexPage };
 }
 
-//Principalmente usado para extrair a descrição da tela mas pode ser reutilizada
-// function extractTextFromHtml(htmlString, cssSelector) {
-//     const dom = new JSDOM(htmlString);
-//     const doc = dom.window.document;
-//     const elemento = doc.querySelector(cssSelector);
-//     return elemento ? elemento.textContent.trim() : null;
-// }
-
 export async function iterateOverEachPageAndReturnAllProperties(url, totalPages, lastIndexPage) {
     let items = [];
     let allLots = [];
@@ -56,6 +48,7 @@ export async function iterateOverEachPageAndReturnAllProperties(url, totalPages,
     return allLots;
 }
 
+//Através do Puppeteer, obtem os dados que só estão na pagina de cada lote individual. Atualmente descrição e coordenadas
 async function getDataFromLotPage(url) {
     const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
@@ -66,10 +59,6 @@ async function getDataFromLotPage(url) {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
     dateTime.delay();
-
-    // const coordinatesSelector = 'div.dg-lote-mapa #map iframe"]'
-    // const coordinatesSelector = 'a[title="Informar erros no mapa ou nas imagens para o Google"]'
-    // await page.waitForSelector(config.COORDINATES_SELECTOR, { visible: true, timeout: 5000 });
 
     const pageData = await page.evaluate((descriptionSelector, coordinatesSelector) => {
         const data = {
@@ -86,6 +75,7 @@ async function getDataFromLotPage(url) {
 
         const iframe = document.querySelector(coordinatesSelector);
 
+        //Extrai as coordenadas
         if (iframe) {
             const src = iframe.src;
             const match = src.match(/q=(-?\d+\.\d+),%20*(-?\d+\.\d+)/);
@@ -99,7 +89,7 @@ async function getDataFromLotPage(url) {
 
         return data;
 
-    }, config.DESCRITION_SELECTOR, config.COORDINATES_SELECTOR);
+    }, config.DESCRITION_SELECTOR, config.COORDINATES_SELECTOR);//Passando os seletores como parametro
 
     // Fecha o navegador
     await browser.close();
@@ -122,26 +112,12 @@ export async function populateJsonObject(allLots, url, siteName) {
             const { latitude, longitude } = pageData.coordinates;
             const { description } = pageData;
 
-            // const html = await connection.fetchHtml(link);
-            // dateTime.delay();
-
             const hasProcess = lote.CFGForms.some(form => form.Label === "Processo" && form.Value);
             const processNumber = lote.CFGForms.find(form => form.Label === "Processo")?.Value || "";
             const type_bem = property.propertyType([lote.IconeCategoria, lote.Categoria]);
 
-            // if (html) {
-            // const description = extractTextFromHtml(html, '.dg-lote-descricao-txt');
-
-            const firstAuctionDate = lote.GetLoteRealTime[0].DataHoraEncerramentoPrimeiraPraca;
-            const secondAuctionDate = lote.GetLoteRealTime[0].DataHoraEncerramentoSegundaPraca;
-            const firstAuctionPriceSite = lote.GetLoteRealTime[0].ValorMinimoLancePrimeiraPraca;
-            const secondAuctionPriceSite = lote.GetLoteRealTime[0].ValorMinimoLanceSegundaPraca;
-
-            const firstAuction = firstAuctionDate !== '1900-01-01T00:00:00' ? dateTime.formatDateTime(firstAuctionDate) : '';
-            const secondAuction = secondAuctionDate !== '1900-01-01T00:00:00' ? dateTime.formatDateTime(secondAuctionDate) : '';
-            
-            const firstAuctionPrice = firstAuction && firstAuction !== '' ? firstAuctionPriceSite : 0;
-            const secondAuctionPrice = secondAuction && secondAuction !== '' ? secondAuctionPriceSite : 0;
+            const { firstAuction, secondAuction } = extractAuctionDates(lote);
+            const { firstAuctionPrice, secondAuctionPrice } = extractAuctionPrices(lote, firstAuction, secondAuction);
 
             const result = {
                 title: `${lote.Leilao} - ${lote.Lote_Bairro} - ${lote.Cidade}/${lote.UF}`,
@@ -174,6 +150,24 @@ export async function populateJsonObject(allLots, url, siteName) {
     return results;
 }
 
+function extractAuctionPrices(lote, firstAuction, secondAuction) {
+    const firstAuctionPriceSite = lote.GetLoteRealTime[0].ValorMinimoLancePrimeiraPraca;
+    const secondAuctionPriceSite = lote.GetLoteRealTime[0].ValorMinimoLanceSegundaPraca;
+    const firstAuctionPrice = firstAuction && firstAuction !== '' ? firstAuctionPriceSite : 0;
+    const secondAuctionPrice = secondAuction && secondAuction !== '' ? secondAuctionPriceSite : 0;
+
+    return { firstAuctionPrice, secondAuctionPrice };
+}
+
+function extractAuctionDates(lote) {
+    const firstAuctionDate = lote.GetLoteRealTime[0].DataHoraEncerramentoPrimeiraPraca;
+    const secondAuctionDate = lote.GetLoteRealTime[0].DataHoraEncerramentoSegundaPraca;
+    const firstAuction = firstAuctionDate !== '1900-01-01T00:00:00' ? dateTime.formatDateTime(firstAuctionDate) : '';
+    const secondAuction = secondAuctionDate !== '1900-01-01T00:00:00' ? dateTime.formatDateTime(secondAuctionDate) : '';
+
+    return { firstAuction, secondAuction };
+}
+
 //Varre a lista de objetos e verifica se algum deles está duplicado, retornando uma lista com apenas itens ÚNICOS.
 export function duplicateRemoval(list) {
     const uniqueObjects = [];
@@ -201,7 +195,7 @@ export function saveToJsonFile(validLots, url) {
     const dataString = JSON.stringify(validLots, null, 2);
 
     const fileName = url.split('https://www.')[1];
-    
+
     // Salva a lista em um arquivo 
     fs.writeFile(`./dados/${fileName}.json`, dataString, (err) => {
         if (err) {
@@ -210,5 +204,5 @@ export function saveToJsonFile(validLots, url) {
             console.log(`Dados salvos com sucesso em /dados/${fileName}.json\n\n`);
         }
     });
-    
+
 }

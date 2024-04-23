@@ -31,27 +31,6 @@ export function getRandomUserAgent() {
     return userAgents[Math.floor(Math.random() * userAgents.length)];
 }
 
-//Cabeçalho da requisição usado para obtenção da pagina HTML via fetch
-// export const optionsUniqueItemPage = {
-//     method: 'POST',
-//     headers: {
-//         'User-Agent': getRandomUserAgent(),
-//         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-//         'Accept-Language': 'pt-BR,en-US;q=0.7,en;q=0.3',
-//         'Accept-Encoding': 'gzip, deflate, br',
-//         'Sec-Fetch-Dest': 'document',
-//         'Sec-Fetch-Mode': 'navigate',
-//         'Sec-Fetch-Site': 'none',
-//         'Connection': 'keep-alive',
-//         'Upgrade-Insecure-Requests': '1',
-//         'Sec-Fetch-User': '?1',
-//         'Cache-Control': 'no-cache',
-//         'TE': 'trailers',
-//         'Pragma': 'no-cache',
-//         'Cache-Control': 'no-cache'
-//     }
-// }
-
 //Cabeçalho da requisição para obtenção dos dados dos lotes da pagina de pesquisa
 export function getoOptionsItemsList(url) { 
     const optionsItemsList = {

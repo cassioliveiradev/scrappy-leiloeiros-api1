@@ -1,5 +1,5 @@
 {
-  "name": "Scrapy API Leiloes",
+  "name": "scrappy-leiloeiros-api1",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -12,9 +12,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "fastify": "^4.26.2",
-    "https-proxy-agent": "^7.0.4",
-    "jsdom": "^24.0.0",
     "node-fetch": "^3.3.2",
     "puppeteer": "^22.6.5"
   }
