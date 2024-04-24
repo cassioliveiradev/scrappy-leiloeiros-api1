@@ -110,7 +110,9 @@ export async function populateJsonObject(allLots, url, siteName) {
             const pageData = await getDataFromLotPage(link);
 
             const { latitude, longitude } = pageData.coordinates;
-            const { description } = pageData;
+            let { description } = pageData;
+
+            description = normalizeText(description);
 
             const hasProcess = lote.CFGForms.some(form => form.Label === "Processo" && form.Value);
             const processNumber = lote.CFGForms.find(form => form.Label === "Processo")?.Value || "";
@@ -143,11 +145,26 @@ export async function populateJsonObject(allLots, url, siteName) {
             };
 
             results.push(result);
-
         }
     }
 
     return results;
+}
+
+function normalizeText(stringText) {
+    const originalText = stringText;
+
+    // Remove caracteres de nova linha e espaços excessivos
+    stringText = stringText.replace(/\s+/g, ' ').trim();
+    
+    // Remove caracteres especiais indesejados, mantendo apenas texto e pontuação básica
+    stringText = stringText.replace(/[^a-zA-Z0-9,.!?-áéíóúÁÉÍÓÚñÑàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛäëïöüÄËÏÖÜçÇ\s]/g, '');
+
+    if (stringText === originalText) {
+        return originalText;
+    } else {
+        return stringText;
+    }
 }
 
 function extractAuctionPrices(lote, firstAuction, secondAuction) {
