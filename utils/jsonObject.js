@@ -57,7 +57,7 @@ async function getDataFromLotPage(url) {
     const randomUserAgent = optionsConfig.getRandomUserAgent();
     await page.setUserAgent(randomUserAgent);
 
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
     dateTime.delay();
 
@@ -104,7 +104,7 @@ export async function populateJsonObject(allLots, url, siteName) {
 
     for (const lote of allLots) {
 
-        const isValidLot = property.propertyType([lote.IconeCategoria, lote.Categoria]) !== 'Indefinido';
+        const isValidLot = property.propertyType([lote.IconeCategoria, lote.Categoria]) !== config.STRING_INVALID_LOT;
 
         if (isValidLot) {
             const link = `${url}/${lote.URLlote}`;
@@ -205,7 +205,7 @@ export function duplicateRemoval(list) {
 
 //Remove Lotes com type_bem Indefinido
 export function filterResults(results) {
-    return results.filter(result => result.type_bem !== 'Indefinido');
+    return results.filter(result => result.type_bem !== config.STRING_INVALID_LOT);
 }
 
 // Função para apagar arquivos originais exceto o unificado
@@ -277,8 +277,5 @@ export function saveToJsonFile(validLots, url) {
         if (err) {
             console.log('Erro ao salvar o arquivo:', err);
         }
-        // else {
-        //     console.log(`Dados salvos com sucesso em ${config.FILE_DIRECTORY}/${fileName}${config.FILE_EXTENSION}\n\n`);
-        // }
     });
 }

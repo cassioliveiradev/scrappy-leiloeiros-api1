@@ -15,3 +15,5 @@ export const COORDINATES_SELECTOR = 'div.dg-lote-mapa #map iframe';
 export const FILE_EXTENSION = '.json';
 export const FILE_DIRECTORY = './dados';
 export const FINAL_FILE_NAME = `todos-lotes-leiloeiros${FILE_EXTENSION}`;
+
+export const STRING_INVALID_LOT = 'Indefinido';

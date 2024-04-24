@@ -23,5 +23,5 @@ export function propertyType(stringList) {
     }
 
     // Retorna 'Indefinido' se nenhuma das strings na lista contém uma palavra-chave de tipo de propriedade
-    return "Indefinido";
+    return config.STRING_INVALID_LOT;
 }
