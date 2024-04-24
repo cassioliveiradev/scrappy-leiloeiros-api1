@@ -45,6 +45,12 @@ async function main() {
 
         console.log(`Extração concluída para: ${site.name} (${site.url}) \n`);
     }
+
+    // Unifica os dados dos arquivos JSON em um único arquivo.
+    await result.unifyJsonFilesStream();
+
+    // Apaga os arquivos originais, deixando somente o arquivo unificado
+    result.deleteOriginalFiles();
 }
 
 main();

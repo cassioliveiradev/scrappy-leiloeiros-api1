@@ -1,5 +1,6 @@
-import { promises as fs } from 'fs';
+import * as fs from 'fs';
 import puppeteer from 'puppeteer';
+import path from 'path';
 import * as footage from './findFootage.js';
 import * as process from './findProcess.js';
 import * as property from './propertiesInfo.js';
@@ -156,7 +157,7 @@ function normalizeText(stringText) {
 
     // Remove caracteres de nova linha e espaços excessivos
     stringText = stringText.replace(/\s+/g, ' ').trim();
-    
+
     // Remove caracteres especiais indesejados, mantendo apenas texto e pontuação básica
     stringText = stringText.replace(/[^a-zA-Z0-9,.!?-áéíóúÁÉÍÓÚñÑàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛäëïöüÄËÏÖÜçÇ\s]/g, '');
 
@@ -207,6 +208,64 @@ export function filterResults(results) {
     return results.filter(result => result.type_bem !== 'Indefinido');
 }
 
+// Função para apagar arquivos originais exceto o unificado
+export function deleteOriginalFiles() {
+    dateTime.delay();
+    const dir = config.FILE_DIRECTORY;
+    const files = fs.readdirSync(dir);
+    files.forEach(file => {
+        if (file !== config.FINAL_FILE_NAME && file.endsWith(config.FILE_EXTENSION)) {
+            fs.unlinkSync(path.join(dir, file));
+        }
+    });
+}
+
+// Função para unificar os JSON usando streams
+export async function unifyJsonFilesStream() {
+    const dir = config.FILE_DIRECTORY;
+    const unifiedFilePath = path.join(dir, config.FINAL_FILE_NAME);
+    const outputStream = fs.createWriteStream(unifiedFilePath, { flags: 'w' });
+
+    outputStream.write('[');
+    let firstFileProcessed = false;
+
+    const files = fs.readdirSync(dir).filter(file => file.endsWith(config.FILE_EXTENSION));
+    for (const file of files) {
+        const filePath = path.join(dir, file);
+        await new Promise((resolve, reject) => {
+            const inputStream = fs.createReadStream(filePath);
+            let dataBuffer = '';
+
+            inputStream.on('data', (chunk) => {
+                dataBuffer += chunk;
+            });
+
+            inputStream.on('end', () => {
+                // Remove os colchetes de abertura e fechamento de cada arquivo
+                dataBuffer = dataBuffer.trim();
+                if (dataBuffer.startsWith('[')) {
+                    dataBuffer = dataBuffer.substring(1);
+                }
+                if (dataBuffer.endsWith(']')) {
+                    dataBuffer = dataBuffer.substring(0, dataBuffer.length - 1);
+                }
+                if (firstFileProcessed && dataBuffer.length > 0) {
+                    outputStream.write(',');
+                }
+                outputStream.write(dataBuffer);
+                firstFileProcessed = true;
+                resolve();
+            });
+
+            inputStream.on('error', reject);
+        });
+    }
+
+    outputStream.write(']');
+    outputStream.end();
+    return new Promise(resolve => outputStream.on('close', resolve));
+}
+
 export function saveToJsonFile(validLots, url) {
     //Lista final convertida para string apenas para salvar em arquivo.
     const dataString = JSON.stringify(validLots, null, 2);
@@ -214,12 +273,12 @@ export function saveToJsonFile(validLots, url) {
     const fileName = url.split('https://www.')[1];
 
     // Salva a lista em um arquivo 
-    fs.writeFile(`./dados/${fileName}.json`, dataString, (err) => {
+    fs.writeFile(`${config.FILE_DIRECTORY}/${fileName}${config.FILE_EXTENSION}`, dataString, (err) => {
         if (err) {
             console.log('Erro ao salvar o arquivo:', err);
-        } else {
-            console.log(`Dados salvos com sucesso em /dados/${fileName}.json\n\n`);
         }
+        // else {
+        //     console.log(`Dados salvos com sucesso em ${config.FILE_DIRECTORY}/${fileName}${config.FILE_EXTENSION}\n\n`);
+        // }
     });
-
 }

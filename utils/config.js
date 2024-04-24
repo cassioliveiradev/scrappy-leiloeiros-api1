@@ -10,3 +10,8 @@ export const MAX_RANGE_DELAY = 7000; // TEMPO EM MILISSEGUNDOS
 //Seletores CSS para extração da descrição e das coordenadas da pagina do lote
 export const DESCRITION_SELECTOR = 'div.dg-lote-descricao-txt';
 export const COORDINATES_SELECTOR = 'div.dg-lote-mapa #map iframe';
+
+//Configurações para o salvamento dos dados nos arquivos
+export const FILE_EXTENSION = '.json';
+export const FILE_DIRECTORY = './dados';
+export const FINAL_FILE_NAME = `todos-lotes-leiloeiros${FILE_EXTENSION}`;
