@@ -1,10 +1,31 @@
 import * as dateTime from './utils/dateTimeUtils.js';
 import * as connection from './utils/connectionUtils.js';
 import * as result from "./utils/jsonObject.js";
-import sites from './utils/sitesInfo.js';
+import * as config from './utils/config.js';
 
 /**
- * Para cada site no arquivo '/utils/sitesInfo.js' Faz uma chamada ao site uma vez para obter a quantidade de lotes.
+ * Aplica uma série de filtros na lista para remover objetos duplicados, inválidos e se já estão expirados
+ * @param {*} results 
+ * @returns 
+ */
+function applyFiltersLotsList(results) {
+    
+    const uniqueList = result.duplicateRemoval(results);
+
+    //Remove atributo de controle 'status' de cada lote
+    const resultsWithoutStatus = uniqueList.map(({ status, ...remainingObjects }) => remainingObjects);
+
+    //Remove Lotes que contenham algum dos termos da config.INVALID_STRINGS
+    const invalidLots = result.removeLotsByInvalidKeyWord(resultsWithoutStatus);
+
+    //Remove todos os lotes com a/as data(s) expiradas dos campos 'first_auction' e 'second_auction'
+    const filteredResults = invalidLots.filter(item => !dateTime.checkDatesExpired(item.date1, item.date2));
+
+    return filteredResults;
+}
+
+/**
+ * Para cada site na constante do arquivo '/utils/config.js' Faz uma chamada ao site uma vez para obter a quantidade de lotes.
  * Com a quantidade de lotes, calcula a quantidade de paginas que terá e itera sobre cada uma, pegando os lotes e armazenando na lista 'allLots'
  * Depois varre a lista de lotes e popula o objeto json com as informações adequadas, fazendo os tratamentos e validações.
  * Por garantia, procura e remove objetos que possam estar duplicados e remove o atributo status que foi usado em parte das validações.
@@ -12,7 +33,7 @@ import sites from './utils/sitesInfo.js';
  * Por fim, salva a lista de lotes em um arquivo json na pasta /dados com um arquivo para cada site.
  */
 async function main() {
-    for (const site of sites) {
+    for (const site of config.SITES) {
         console.log(`\nIniciando extração de dados para: ${site.name} (${site.url})`);
 
         //Faz uma primeira chamada para obter a contagem total de itens, apenas
@@ -30,13 +51,7 @@ async function main() {
         const results = await result.populateJsonObject(allLots, site.url, site.name);
 
         //Garante que não haja itens duplicados
-        const uniqueList = result.duplicateRemoval(results);
-
-        //Remove atributo de controle 'status' de cada lote
-        const resultsWithoutStatus = uniqueList.map(({ status, ...remainingObjects }) => remainingObjects);
-
-        //Remove todos os lotes com a/as data(s) expiradas dos campos 'first_auction' e 'second_auction'
-        const filteredResults = resultsWithoutStatus.filter(item => !dateTime.checkDatesExpired(item.date1, item.date2));
+        const filteredResults = applyFiltersLotsList(results);
 
         //ESTA LISTA É A FINAL APÓS TODOS OS TRATAMENTOS
         const finalResult = result.filterResults(filteredResults);
