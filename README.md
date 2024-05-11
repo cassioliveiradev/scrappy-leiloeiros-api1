@@ -27,6 +27,7 @@ Para executar o script, utilize o comando: ```npm start```
 O arquivo JSON gerado segue estrutura do exemplo abaixo:
 ```json
 [
+  {
    "title": "1 Casa | Rua Soldado PM D'jango da Silva, 530 | Caranã - Caranã - Boa Vista/RR",
     "state": "RR",
     "city": "Boa Vista",
